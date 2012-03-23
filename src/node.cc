@@ -985,6 +985,14 @@ void MakeCallback(Handle<Object> object,
   assert(callback_v->IsFunction());
   Local<Function> callback = Local<Function>::Cast(callback_v);
 
+  process->Set(String::NewSymbol("turn")
+            , Integer::New(process
+                            ->Get(String::NewSymbol("turn"))
+                            ->IntegerValue() + 1));
+
+  process->Set(String::NewSymbol("parent_turn")
+            , object->Get(String::NewSymbol("turn")));
+                
   // TODO Hook for long stack traces to be made here.
 
   TryCatch try_catch;
@@ -2148,6 +2156,9 @@ Handle<Object> SetupProcessObject(int argc, char *argv[]) {
   process->Set(String::NewSymbol("env"), env);
 
   process->Set(String::NewSymbol("pid"), Integer::New(getpid()));
+
+  process->Set(String::NewSymbol("turn"), Integer::New(1));
+    
   process->Set(String::NewSymbol("features"), GetFeatures());
 
   // -e, --eval

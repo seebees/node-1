@@ -125,6 +125,13 @@ HandleWrap::HandleWrap(Handle<Object> object, uv_handle_t* h) {
   assert(object->InternalFieldCount() > 0);
   object_ = v8::Persistent<v8::Object>::New(object);
   object_->SetPointerInInternalField(0, this);
+  
+  object_->Set(String::NewSymbol("turn")
+             , Context::GetCurrent()
+                        ->Global()
+                        ->Get(String::New("process"))
+                        ->ToObject()
+                        ->Get(String::NewSymbol("turn")));
 }
 
 
