@@ -20,11 +20,14 @@
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 console.log('     start tick:' + process.tick);
+console.log('     start tock:' + process.tock);
 
 function ohMy() {
   console.log('20 timeout tick:' + process.tick);
+  console.log('20 timeout tock:' + process.tock);
   setTimeout(function() {
     console.log('30 timeout tick:' + process.tick);
+    console.log('30 timeout tock:' + process.tock);
   }, 30);
 }
 
@@ -32,11 +35,14 @@ setTimeout(ohMy, 20);
 
 setTimeout(function() {
   console.log('10 timeout tick:' + process.tick);
+  console.log('10 timeout tock:' + process.tock);
   setTimeout(function() {
     console.log('15 timeout tick:' + process.tick);
+    console.log('15 timeout tock:' + process.tock);
   }, 5);
 }, 10);
 
 process.nextTick(function() {
-  console.log('     next tick:' + process.tick);
+  console.log('      next tick:' + process.tick);
+  console.log('      next tock:' + process.tock);
 });

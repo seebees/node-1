@@ -92,8 +92,11 @@ ngx_queue_t req_wrap_queue = { &req_wrap_queue, &req_wrap_queue };
 // declared in req_wrap.h
 Persistent<String> process_symbol;
 Persistent<String> domain_symbol;
+Persistent<String> object_tock_symbol;
 
 static Persistent<Object> process;
+static Persistent<String> process_tick_symbol;
+static Persistent<String> process_tock_symbol;
 
 static Persistent<String> errno_symbol;
 static Persistent<String> syscall_symbol;
@@ -247,6 +250,14 @@ static void Tick(void) {
   if (try_catch.HasCaught()) {
     FatalException(try_catch);
   }
+}
+
+unsigned int tick_count;
+void node_tick_me_off() {
+  tick_count++;
+}
+unsigned int current_tick() {
+  return tick_count;
 }
 
 
@@ -995,6 +1006,7 @@ MakeCallback(const Handle<Object> object,
 
   // TODO Hook for long stack traces to be made here.
 
+  node_tick_me_off();
   TryCatch try_catch;
 
   if (process_makeCallback.IsEmpty()) {
@@ -1014,6 +1026,12 @@ MakeCallback(const Handle<Object> object,
 
   Local<Value> object_l = Local<Value>::New(object);
   Local<Value> callback_l = Local<Value>::New(callback);
+
+  process->Set(process_tick_symbol
+             , Integer::New(current_tick()));
+
+  process->Set(process_tock_symbol
+             , object->Get(object_tock_symbol));
 
   Local<Value> args[3] = { object_l, callback_l, argArray };
 
@@ -2183,6 +2201,16 @@ Handle<Object> SetupProcessObject(int argc, char *argv[]) {
   process->Set(String::NewSymbol("pid"), Integer::New(getpid()));
   process->Set(String::NewSymbol("features"), GetFeatures());
 
+  // Lazily set the symbol
+  process_tick_symbol = NODE_PSYMBOL("tick");
+  process_tock_symbol = NODE_PSYMBOL("tock");
+
+  node_tick_me_off();
+  process->Set(process_tick_symbol
+             , Integer::New(current_tick()));
+  process->Set(process_tock_symbol
+             , Integer::New(current_tick()));
+
   // -e, --eval
   if (eval_string) {
     process->Set(String::NewSymbol("_eval"), String::New(eval_string));
@@ -2890,6 +2918,7 @@ int Start(int argc, char *argv[]) {
 
     process_symbol = NODE_PSYMBOL("process");
     domain_symbol = NODE_PSYMBOL("domain");
+    object_tock_symbol  = NODE_PSYMBOL("node::tock");
 
     // Use original argv, as we're just copying values out of it.
     Handle<Object> process_l = SetupProcessObject(argc, argv);

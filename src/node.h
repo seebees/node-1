@@ -87,6 +87,9 @@ namespace node {
 
 NODE_EXTERN extern bool no_deprecation;
 
+NODE_EXTERN unsigned int current_tick();
+NODE_EXTERN void node_tick_me_off();
+
 NODE_EXTERN int Start(int argc, char *argv[]);
 
 char** Init(int argc, char *argv[]);
