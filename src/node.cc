@@ -1026,12 +1026,15 @@ MakeCallback(const Handle<Object> object,
 
   Local<Value> object_l = Local<Value>::New(object);
   Local<Value> callback_l = Local<Value>::New(callback);
+  Local<Value> tock = Local<Value>::New(callback);
 
   process->Set(process_tick_symbol
              , Integer::New(current_tick()));
 
-  process->Set(process_tock_symbol
-             , object->Get(object_tock_symbol));
+  if (!(tock.IsEmpty())) {
+    process->Set(process_tock_symbol
+               , object->GetHiddenValue(object_tock_symbol));
+  }
 
   Local<Value> args[3] = { object_l, callback_l, argArray };
 

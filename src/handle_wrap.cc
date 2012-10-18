@@ -113,7 +113,7 @@ HandleWrap::HandleWrap(Handle<Object> object, uv_handle_t* h) {
   assert(object->InternalFieldCount() > 0);
   object_ = v8::Persistent<v8::Object>::New(object);
   object_->SetPointerInInternalField(0, this);
-  object_->Set(object_tock_symbol
+  object_->SetHiddenValue(object_tock_symbol
                         , Integer::New(current_tick()));
   ngx_queue_insert_tail(&handle_wrap_queue, &handle_wrap_queue_);
 }
