@@ -29,6 +29,8 @@ namespace node {
 // defined in node.cc
 extern v8::Persistent<v8::String> process_symbol;
 extern v8::Persistent<v8::String> domain_symbol;
+extern v8::Persistent<v8::String> object_tock_symbol;
+extern v8::Persistent<v8::String> process_tick_symbol;
 extern ngx_queue_t req_wrap_queue;
 
 template <typename T>
@@ -47,6 +49,18 @@ class ReqWrap {
     if (!domain->IsUndefined()) {
       // fprintf(stderr, "setting domain on ReqWrap\n");
       object_->Set(domain_symbol, domain);
+    }
+
+    v8::Local<v8::Value> tock =  v8::Context::GetCurrent()
+                                 ->Global()
+                                 ->Get(process_symbol)
+                                 ->ToObject()
+                                 ->Get(process_tick_symbol);
+
+    if (!(tock.IsEmpty())) {
+      //fprintf(stderr, "tock: %d\n", tock->Int32Value());
+      object_->SetHiddenValue(object_tock_symbol
+                          , tock);
     }
 
     ngx_queue_insert_tail(&req_wrap_queue, &req_wrap_queue_);

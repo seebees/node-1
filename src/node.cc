@@ -95,8 +95,11 @@ ngx_queue_t req_wrap_queue = { &req_wrap_queue, &req_wrap_queue };
 // declared in req_wrap.h
 Persistent<String> process_symbol;
 Persistent<String> domain_symbol;
+Persistent<String> object_tock_symbol;
+Persistent<String> process_tick_symbol;
 
 static Persistent<Object> process;
+static Persistent<String> process_tock_symbol;
 
 static Persistent<String> errno_symbol;
 static Persistent<String> syscall_symbol;
@@ -251,7 +254,6 @@ static void Tick(void) {
     FatalException(try_catch);
   }
 }
-
 
 static void Spin(uv_idle_t* handle, int status) {
   assert((uv_idle_t*) handle == &tick_spinner);
@@ -1017,6 +1019,15 @@ MakeCallback(const Handle<Object> object,
 
   Local<Value> object_l = Local<Value>::New(object);
   Local<Value> callback_l = Local<Value>::New(callback);
+  Local<Value> tock = object->GetHiddenValue(object_tock_symbol);
+
+  if (!(tock.IsEmpty())) {
+    process->Set(process_tock_symbol
+               , tock);
+  } else {
+    process->Set(process_tock_symbol
+               , Integer::New(0));
+  }
 
   Local<Value> args[3] = { object_l, callback_l, argArray };
 
@@ -2190,6 +2201,10 @@ Handle<Object> SetupProcessObject(int argc, char *argv[]) {
   process->Set(String::NewSymbol("pid"), Integer::New(getpid()));
   process->Set(String::NewSymbol("features"), GetFeatures());
 
+  // Lazily set the symbol
+  process_tick_symbol = NODE_PSYMBOL("tick");
+  process_tock_symbol = NODE_PSYMBOL("tock");
+
   // -e, --eval
   if (eval_string) {
     process->Set(String::NewSymbol("_eval"), String::New(eval_string));
@@ -2897,6 +2912,7 @@ int Start(int argc, char *argv[]) {
 
     process_symbol = NODE_PSYMBOL("process");
     domain_symbol = NODE_PSYMBOL("domain");
+    object_tock_symbol  = NODE_PSYMBOL("node::tock");
 
     // Use original argv, as we're just copying values out of it.
     Handle<Object> process_l = SetupProcessObject(argc, argv);

@@ -27,6 +27,8 @@
 (function(process) {
   this.global = this;
 
+  var current_tick = 1;
+
   function startup() {
     var EventEmitter = NativeModule.require('events').EventEmitter;
 
@@ -37,6 +39,8 @@
     });
 
     process.EventEmitter = EventEmitter; // process.EventEmitter is deprecated
+    process.tick = current_tick;
+    process.tock = 0;
 
     startup.globalVariables();
     startup.globalTimeouts();
@@ -248,6 +252,7 @@
       var ret = fn.apply(obj, args);
 
       if (domain) domain.exit();
+      process.tick = (current_tick += 1);
 
       // process the nextTicks after each time we get called.
       process._tickCallback();
@@ -332,6 +337,7 @@
           }
           var threw = true;
           try {
+            process.tock = tock.tick;
             callback();
             threw = false;
           } finally {
@@ -342,6 +348,7 @@
           if (tock.domain) {
             tock.domain.exit();
           }
+          process.tick = (current_tick += 1);
         }
         nextTickQueue.splice(0, nextTickIndex);
         nextTickIndex = 0;
@@ -361,7 +368,7 @@
       if (tickDepth >= process.maxTickDepth)
         maxTickWarn();
 
-      var tock = { callback: callback };
+      var tock = { callback: callback, tick: current_tick };
       if (process.domain) tock.domain = process.domain;
       nextTickQueue.push(tock);
       if (nextTickQueue.length) {

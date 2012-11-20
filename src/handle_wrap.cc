@@ -49,7 +49,9 @@ using v8::Integer;
 
 // defined in node.cc
 extern ngx_queue_t handle_wrap_queue;
-
+extern v8::Persistent<v8::String> object_tock_symbol;
+extern v8::Persistent<v8::String> process_tick_symbol;
+extern v8::Persistent<v8::String> process_symbol;
 
 void HandleWrap::Initialize(Handle<Object> target) {
   /* Doesn't do anything at the moment. */
@@ -113,6 +115,20 @@ HandleWrap::HandleWrap(Handle<Object> object, uv_handle_t* h) {
   assert(object->InternalFieldCount() > 0);
   object_ = v8::Persistent<v8::Object>::New(object);
   object_->SetPointerInInternalField(0, this);
+
+  Local<Value> tock =  v8::Context::GetCurrent()
+                       ->Global()
+                       ->Get(process_symbol)
+                       ->ToObject()
+                       ->Get(process_tick_symbol);
+
+  if (!(tock.IsEmpty())) {
+    //fprintf(stderr, "tock: %d\n", tock->Int32Value());
+
+    object_->SetHiddenValue(object_tock_symbol
+                        , tock);
+  }
+
   ngx_queue_insert_tail(&handle_wrap_queue, &handle_wrap_queue_);
 }
 
