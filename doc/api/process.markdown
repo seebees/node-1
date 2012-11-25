@@ -464,6 +464,30 @@ The `process.maxTickDepth` value is the maximum depth of
 nextTick-calling nextTick-callbacks that will be evaluated before
 allowing other forms of I/O to occur.
 
+## process.tick
+
+* {Number} Initial = 1
+
+The number of turns of the event loop.  Every time the JS stack is reset
+this number is incremented by one.  It is incremented for nextTick as
+well as for every return to Javascript from C.  This number provides a
+locally unique identifier for turn cycle of the event loop.  Combining this
+with `process.tock` it is possible in production systems to log out and
+then subsequently unwind the entire stack for any event.
+
+## process.tock
+
+* {Number} Initial = 0
+
+The corresponding tick from whence the current tick originated.
+
+    process.tick == 1;    // this is the first turn
+    process.tock == 0;    // there are no events before me
+    process.nextTick(function() {
+      process.tick == 2;  // the next event
+      process.tock == 1;  // was called from tick 1
+    });
+
 ## process.umask([mask])
 
 Sets or reads the process's file mode creation mask. Child processes inherit
